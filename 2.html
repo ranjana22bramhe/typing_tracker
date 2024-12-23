@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Practice App</title>
+  <!-- Tailwind CSS CDN Link -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN Link -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans"> 
+
+  <!-- Navbar -->
+  <nav class="bg-purple-500 p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <!-- Left Side - Typing Speed Tracker -->
+      <div class="text-white text-2xl font-semibold">
+        Typing Speed Tracker
+      </div>
+      <!-- Right Side - Lesson, Test, Login -->
+      <div class="space-x-6 text-white">
+        <a href="2.html" class="hover:underline">Lesson</a>
+        <a href="3.html" class="hover:underline">Test</a>
+        <a href="1.html" class="hover:underline">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto p-6">
+    <div class="flex flex-col md:flex-row gap-6">
+      <!-- Main Content -->
+      <div class="flex-1 p-6 bg-white rounded-xl shadow-lg">
+        <h1 class="text-3xl font-semibold text-center mb-4">Typing Practice</h1>
+        
+        <!-- Text to Type -->
+        <p class="text-lg mb-4" id="text-to-type">Select a level to start practicing.</p>
+        
+        <!-- Typing Area -->
+        <textarea id="typing-area" class="w-full p-3 border border-gray-300 rounded mt-4 mb-6 text-base" placeholder="Start typing..." disabled></textarea>
+        
+        <!-- Start Button -->
+        <button id="start-btn" class="bg-purple-500 text-white px-6 py-2 rounded mt-4 w-50">Start</button>
+
+        <!-- Next Button -->
+        <button id="next-btn" class="bg-purple-500 text-white px-6 py-2 rounded mt-4 w-50 hidden">Reset</button>
+
+        <!-- Results -->
+        <div class="mt-6">
+          <p class="text-lg" id="accuracy">Accuracy: 0%</p>
+          <p class="text-lg" id="speed">Speed: 0 WPM</p>
+          <p class="text-lg" id="time-elapsed">Time: 0:00</p>
+        </div>
+      </div>
+
+      <!-- Right Sidebar -->
+      <div class="w-full md:w-64 p-6 bg-white rounded-xl shadow-lg">
+        <h2 class="text-xl font-semibold mb-4">Select Difficulty Level</h2>
+        <div class="space-y-4">
+          <button class="w-full bg-gray-200 hover:bg-purple-500 hover:text-white text-gray-700 font-medium py-2 px-4 rounded" onclick="changeLevel('beginner')">Beginner</button>
+          <button class="w-full bg-gray-200 hover:bg-purple-500 hover:text-white text-gray-700 font-medium py-2 px-4 rounded" onclick="changeLevel('intermediate')">Intermediate</button>
+          <button class="w-full bg-gray-200 hover:bg-purple-500 hover:text-white text-gray-700 font-medium py-2 px-4 rounded" onclick="changeLevel('advanced')">Advanced</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart and Results Outside the Main Content -->
+  <div class="container mx-auto p-6">
+    <div class="text-center mb-4">
+      <h3 class="text-xl font-semibold">Accuracy Result</h3>
+    </div>
+    <div class="flex justify-center">
+      <div class="w-32 h-32">
+        <canvas id="accuracy-chart" width="80" height="80"></canvas> <!-- Smaller Canvas size -->
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Chart.js pie chart with smaller size
+    const ctx = document.getElementById('accuracy-chart').getContext('2d');
+    const accuracyChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Correct', 'Incorrect'],
+        datasets: [{
+          data: [0, 0], // Initialize with 0 for both
+          backgroundColor: ['#28a745', '#dc3545'], // Green for correct, Red for incorrect
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false, // Allow chart to be resized without maintaining aspect ratio
+        plugins: {
+          legend: {
+            display: false // Hide the legend for better clarity in smaller chart
+          },
+          tooltip: {
+            enabled: false // Disable tooltips for better visual space
+          }
+        }
+      }
+    });
+
+    // Practice text for different levels
+    const practiceTexts = {
+      beginner: [
+        "The quick brown fox jumps over the lazy dog.",
+        "She sells seashells by the seashore.",
+        "A bird in the hand is worth two in the bush.",
+        "Don't count your chickens before they hatch.",
+        "Actions speak louder than words.",
+        "Practice makes perfect.",
+        "Where there's a will, there's a way."
+      ],
+      intermediate: [
+        "A journey of a thousand miles begins with a single step, but only if you start taking the first step today and commit to the journey ahead.",
+        "To be or not to be, that is the question, and the answer lies within your heart, not just in the stars.",
+        "The only way to do great work is to love what you do, to truly believe in your passion and dedication, and to keep pushing through the challenges.",
+        "The best way to predict the future is to create it, to take action today that will shape the outcomes of tomorrow, and to never give up on your dreams.",
+        "Life is like riding a bicycle. To keep your balance, you must keep moving forward, no matter how steep the hills or how rough the roads may be.",
+        "The greatest glory in living lies not in never falling, but in rising every time we fall, in learning from our mistakes and growing stronger with each challenge.",
+        "The only limit to our realization of tomorrow will be our doubts of today, so let us move forward with strong and active faith, believing in the power of our dreams and the strength of our will."
+      ],
+      advanced: [
+        "Success is not final, failure is not fatal: It is the courage to continue that counts, no matter how many times you fall or how long the road may seem.",
+        "You miss 100% of the shots you don’t take, but more importantly, you miss the lessons you would have learned from taking those risks and growing through them.",
+        "The purpose of life is not to be happy. It is to be useful, to be honorable, to be compassionate, and to have it make some difference that you have lived and lived well, in a way that impacts others around you.",
+        "The only way to achieve the impossible is to believe it is possible, to see the invisible, to feel the intangible, and to achieve the impossible through the power of your dreams and the strength of your will.",
+        "The best way to find yourself is to lose yourself in the service of others, to give back to your community and to the world, to make a positive impact that will outlast your time on this earth.",
+        "The future belongs to those who believe in the beauty of their dreams, who are willing to work hard and sacrifice for their goals, and who never give up on the power of their vision and the strength of their spirit.",
+        "The only thing standing between you and your goal is the story you keep telling yourself as to why you can't achieve it, so change the narrative, rewrite the script, and take action to make your dreams a reality."
+      ]
+    };
+
+    let currentText = "";
+    let startTime;
+    let typingStarted = false;
+    let timerInterval;
+
+    const textElement = document.getElementById("text-to-type");
+    const typingArea = document.getElementById("typing-area");
+    const startButton = document.getElementById("start-btn");
+    const nextButton = document.getElementById("next-btn");
+    const accuracyElement = document.getElementById("accuracy");
+    const speedElement = document.getElementById("speed");
+    const timeElapsedElement = document.getElementById("time-elapsed");
+
+    // Function to get a random text based on level
+    function getRandomText(level) {
+      const textArray = practiceTexts[level];
+      return textArray[Math.floor(Math.random() * textArray.length)];
+    }
+
+    // Function to calculate accuracy
+    function calculateAccuracy(input, correctText) {
+      let correctCount = 0;
+      for (let i = 0; i < input.length; i++) {
+        if (input[i] === correctText[i]) {
+          correctCount++;
+        }
+      }
+      return ((correctCount / correctText.length) * 100).toFixed(2);
+    }
+
+    // Function to calculate speed in words per minute (WPM)
+    function calculateSpeed(startTime, endTime, wordsTyped) {
+      const timeInMinutes = (endTime - startTime) / 60000;
+      return Math.round(wordsTyped / timeInMinutes);
+    }
+
+    // Function to format time in minutes and seconds
+    function formatTime(ms) {
+      const minutes = Math.floor(ms / 60000);
+      const seconds = Math.floor((ms % 60000) / 1000);
+      return `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+    }
+
+    // Function to reset practice
+    function resetPractice() {
+      typingArea.value = "";
+      typingArea.disabled = false;
+      typingStarted = false;
+      clearInterval(timerInterval);
+      textElement.textContent = "Select a level to start practicing.";
+      accuracyElement.textContent = "Accuracy: 0%";
+      speedElement.textContent = "Speed: 0 WPM";
+      timeElapsedElement.textContent = "Time: 0:00";
+      accuracyChart.data.datasets[0].data = [0, 0]; // Reset pie chart
+      accuracyChart.update();
+      nextButton.classList.add('hidden'); // Hide Next button initially
+    }
+
+    // Function to change level and start practice
+    function changeLevel(level) {
+      typingArea.value = "";
+      typingArea.disabled = false;
+      typingStarted = false;
+      clearInterval(timerInterval);
+      currentText = getRandomText(level);
+      textElement.textContent = currentText;
+      accuracyElement.textContent = "Accuracy: 0%";
+      speedElement.textContent = "Speed: 0 WPM";
+      timeElapsedElement.textContent = "Time: 0:00";
+      accuracyChart.data.datasets[0].data = [0, 0]; // Reset pie chart
+      accuracyChart.update();
+      nextButton.classList.remove('hidden'); // Show Next button
+    }
+
+    // Function to handle typing and calculating results
+    function handleTyping() {
+      const typedText = typingArea.value;
+      const correctText = currentText;
+
+      if (!typingStarted) {
+        typingStarted = true;
+        startTime = new Date();
+        startButton.disabled = true; // Disable the Start button once started
+        timerInterval = setInterval(() => {
+          const elapsedTime = new Date() - startTime;
+          timeElapsedElement.textContent = `Time: ${formatTime(elapsedTime)}`;
+        }, 1000);
+      }
+
+      const accuracy = calculateAccuracy(typedText, correctText);
+      const wordsTyped = typedText.trim().split(/\s+/).length;
+
+      const currentTime = new Date();
+      const speed = calculateSpeed(startTime, currentTime, wordsTyped);
+
+      accuracyElement.textContent = `Accuracy: ${accuracy}%`;
+      speedElement.textContent = `Speed: ${speed} WPM`;
+
+      // Update pie chart based on typed text
+      let correctLetters = 0;
+      let incorrectLetters = 0;
+
+      for (let i = 0; i < typedText.length; i++) {
+        if (typedText[i] === correctText[i]) {
+          correctLetters++;
+        } else {
+          incorrectLetters++;
+        }
+      }
+
+      accuracyChart.data.datasets[0].data = [correctLetters, incorrectLetters];
+      accuracyChart.update();
+
+      if (typedText === correctText) {
+        typingArea.disabled = true;
+        clearInterval(timerInterval);
+        alert("Well done! You completed the text.");
+      }
+    }
+
+    // Event listeners
+    startButton.addEventListener("click", () => changeLevel('beginner'));
+    nextButton.addEventListener("click", resetPractice);
+    typingArea.addEventListener("input", handleTyping);
+
+    // Initialize
+    resetPractice();
+  </script>
+</body>
+</html>

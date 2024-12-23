@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Typing Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6 max-w-lg bg-white shadow-md rounded-lg">
+        <h1 class="text-2xl font-bold text-center mb-4">Continuous Typing Test</h1>
+
+        <div class="flex justify-between mb-4">
+            <select id="minutes-dropdown" class="w-1/2 mr-2 p-2 border border-gray-300 rounded-lg">
+                <option value="" disabled selected>Select Minutes</option>
+            </select>
+            <select id="pages-dropdown" class="w-1/2 ml-2 p-2 border border-gray-300 rounded-lg">
+                <option value="" disabled selected>Select Pages</option>
+            </select>
+        </div>
+
+        <button id="start-test" class="w-full p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Start Test</button>
+
+        <div class="flex justify-between mt-4">
+            <p id="timer" class="font-semibold text-gray-700 mb-2">Time Remaining: 0:00</p>
+            <label class="flex items-center">
+                <input id="toggle-highlight" class="mr-2" type="checkbox">
+            </label>
+        </div>
+
+        <div id="text-to-type" class="p-4 bg-gray-100 border border-gray-300 rounded-lg h-48 overflow-y-auto whitespace-pre-wrap"></div>
+        <textarea id="typing-input" rows="5" class="w-full p-2 mt-2 border border-gray-300 rounded-lg" placeholder="Start typing here..." disabled></textarea>
+        
+        <div id="result" class="mt-4 text-center text-gray-700"></div>
+    </div>
+
+    <script>
+        const paragraphs = [
+            "Lila always loved the ocean. Every summer, she’d visit the small coastal town of Seabrook, where the waves whispered secrets, and the salty breeze carried the scent of freedom. Her favorite spot was a hidden cove, surrounded by towering cliffs, where the ocean shimmered like liquid silver under the moonlight.",
+            "One evening, while exploring the cove, she stumbled upon a strange, glowing shell. Its luminescence pulsed like a heartbeat, and she felt drawn to its mysterious aura. As she picked it up, a soft voice echoed in her mind, whispering tales of an ancient underwater kingdom.",
+            "The shell seemed to guide her. Every night, it glowed brighter, leading her to the edge of the cove. She began to notice strange patterns in the waves and hear melodies in the wind. It was as if the ocean itself was calling her, revealing secrets hidden beneath its depths.",
+            "One night, as she held the shell under the full moon, the water shimmered and parted, revealing a glowing pathway. Without hesitation, Lila stepped into the water. The waves embraced her, and she felt a surge of energy as if the ocean was welcoming her home.",
+            "Lila found herself in a breathtaking underwater kingdom, where mermaids swam gracefully, and coral palaces glistened. The shell had chosen her to protect their world, bridging the ocean and the surface. From that moment, Lila's destiny was forever tied to the mysteries of the deep."
+        ];
+
+        const minutesDropdown = document.getElementById("minutes-dropdown");
+        const pagesDropdown = document.getElementById("pages-dropdown");
+        const startButton = document.getElementById("start-test");
+        const timerDisplay = document.getElementById("timer");
+        const textToType = document.getElementById("text-to-type");
+        const typingInput = document.getElementById("typing-input");
+        const toggleHighlight = document.getElementById("toggle-highlight");
+        const resultDisplay = document.getElementById("result");
+
+        let timer = 0;
+        let interval;
+        let highlightEnabled = true;
+
+        function populateDropdowns() {
+            for (let i = 1; i <= 60; i++) {
+                const minuteOption = document.createElement("option");
+                minuteOption.value = i;
+                minuteOption.textContent = `${i} Minute${i > 1 ? "s" : ""}`;
+                minutesDropdown.appendChild(minuteOption);
+            }
+
+            for (let i = 1; i <= paragraphs.length; i++) {
+                const pageOption = document.createElement("option");
+                pageOption.value = i;
+                pageOption.textContent = `${i} Page${i > 1 ? "s" : ""}`;
+                pagesDropdown.appendChild(pageOption);
+            }
+        }
+
+        function startTest() {
+            const selectedMinute = minutesDropdown.value;
+            const selectedPages = pagesDropdown.value;
+
+            if (!selectedMinute || !selectedPages) {
+                alert("Please select both time and pages.");
+                return;
+            }
+
+            typingInput.value = "";
+            typingInput.disabled = false;
+            resultDisplay.textContent = "";
+
+            const pagesToDisplay = paragraphs.slice(0, selectedPages);
+            textToType.textContent = pagesToDisplay.join(" \n\n");
+
+            timer = selectedMinute * 60;
+            interval = setInterval(() => {
+                if (timer > 0) {
+                    timer--;
+                    const minutes = Math.floor(timer / 60);
+                    const seconds = timer % 60;
+                    timerDisplay.textContent = `Time Remaining: ${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+                } else {
+                    endTest();
+                }
+            }, 1000);
+        }
+
+        function endTest() {
+            clearInterval(interval);
+            typingInput.disabled = true;
+
+            const userInput = typingInput.value;
+            const targetText = textToType.textContent;
+            let correct = 0, incorrect = 0;
+
+            for (let i = 0; i < userInput.length; i++) {
+                if (userInput[i] === targetText[i]) correct++;
+                else incorrect++;
+            }
+
+            resultDisplay.textContent = `Correct: ${correct}, Incorrect: ${incorrect}`;
+        }
+
+        function handleTyping() {
+            if (!highlightEnabled) return;
+
+            const userInput = typingInput.value;
+            const targetText = textToType.textContent;
+            let highlightedText = "";
+
+            for (let i = 0; i < targetText.length; i++) {
+                const char = targetText[i];
+                if (i < userInput.length) {
+                    highlightedText += userInput[i] === char
+                        ? `<span>${char}</span>`
+                        : `<span style="color: red;">${char}</span>`;
+                } else {
+                    highlightedText += char;
+                }
+            }
+
+            textToType.innerHTML = highlightedText;
+        }
+
+        toggleHighlight.addEventListener("change", () => {
+            highlightEnabled = toggleHighlight.checked;
+        });
+
+        typingInput.addEventListener("input", handleTyping);
+        startButton.addEventListener("click", startTest);
+
+        populateDropdowns();
+    </script>
+</body>
+
+</html>
